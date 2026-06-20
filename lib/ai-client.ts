@@ -5,15 +5,16 @@
  * SECURITY: Server-side only. Keys never reach the client bundle.
  */
 
-export type AIProvider = "gemini" | "anthropic" | "openai";
+export type AIProvider = "gemini" | "anthropic" | "openai" | "demo";
 
 function getProvider(): AIProvider {
-  if (process.env.GEMINI_API_KEY) return "gemini";
-  if (process.env.ANTHROPIC_API_KEY) return "anthropic";
-  if (process.env.OPENAI_API_KEY) return "openai";
-  throw new Error("No AI provider configured. Set GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY in .env.local");
+  // Treat empty strings as unset — only accept non-empty keys
+  if (process.env.GEMINI_API_KEY?.trim()) return "gemini";
+  if (process.env.ANTHROPIC_API_KEY?.trim()) return "anthropic";
+  if (process.env.OPENAI_API_KEY?.trim()) return "openai";
+  // No key configured — return "demo" so the app can run without crashing
+  return "demo";
 }
-
 export async function generateCompletion(
   systemPrompt: string,
   userMessage: string,
@@ -21,6 +22,7 @@ export async function generateCompletion(
 ): Promise<string> {
   const provider = getProvider();
   const maxTokens = options.maxTokens ?? 1024;
+  if (provider === "demo") return demoCompletion(systemPrompt, userMessage, options.jsonMode ?? false);
   if (provider === "gemini") return geminiCompletion(systemPrompt, userMessage, maxTokens, options.jsonMode ?? false);
   if (provider === "openai") return openaiCompletion(systemPrompt, userMessage, maxTokens, options.jsonMode ?? false);
   return anthropicCompletion(systemPrompt, userMessage, maxTokens);
@@ -33,6 +35,7 @@ export async function generateStream(
 ): Promise<ReadableStream<Uint8Array>> {
   const provider = getProvider();
   const maxTokens = options.maxTokens ?? 512;
+  if (provider === "demo") return demoStream(messages);
   if (provider === "gemini") return geminiStream(systemPrompt, messages, maxTokens);
   if (provider === "openai") return openaiStream(systemPrompt, messages, maxTokens);
   return anthropicStream(systemPrompt, messages, maxTokens);

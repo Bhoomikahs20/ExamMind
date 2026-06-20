@@ -100,8 +100,8 @@ export default function TriggerChart({ data }: TriggerChartProps) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-              {chartData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              {chartData.map((d, i) => (
+                <Cell key={`cell-${d.tag}-${i}`} fill={COLORS[i % COLORS.length]} />
               ))}
             </Bar>
           </BarChart>

@@ -75,8 +75,8 @@ export default function MoodChart({ data }: MoodChartProps) {
           </tr>
         </thead>
         <tbody>
-          {chartData.map((d) => (
-            <tr key={d.date}>
+          {chartData.map((d, i) => (
+            <tr key={`${d.date}-${i}`}>
               <td>{d.displayDate}</td>
               <td>
                 {MOOD_CONFIG[d.mood as 1 | 2 | 3 | 4 | 5]?.label ?? d.mood} ({d.mood}/5)

@@ -286,7 +286,9 @@ export function seedDemoData(): void {
 
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today);
-    date.setDate(date.getDate() - i);
+    // Offset by 1 extra so demo data ends at yesterday, never today.
+    // This prevents duplicate-key collisions if the user also checks in today.
+    date.setDate(date.getDate() - i - 1);
     const dateStr = format(date, "yyyy-MM-dd");
     const [mood, text, tags] = moods[6 - i];
 

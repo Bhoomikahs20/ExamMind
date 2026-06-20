@@ -121,7 +121,6 @@ export async function POST(req: NextRequest) {
       maxTokens: 512,
       jsonMode: true,
     });
-
     // Parse and validate the JSON response
     let parsed: Record<string, unknown>;
     try {
@@ -173,7 +172,15 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("[analyze] AI error:", err);
+    const msg = err instanceof Error ? err.message : "unknown";
+    console.error("[analyze] AI error:", msg);
+    // Return a friendly error so the UI can show a toast rather than crashing
+    if (msg.includes("401") || msg.includes("invalid_api_key") || msg.includes("No AI provider")) {
+      return NextResponse.json(
+        { error: "AI key not configured or invalid. Add a valid GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY to .env.local" },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { error: "AI analysis failed. Please try again." },
       { status: 502 }
