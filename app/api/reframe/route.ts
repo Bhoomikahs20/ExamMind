@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateCompletion } from "@/lib/ai-client";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { sanitizeUserText } from "@/lib/mood-utils";
+import { ReframeSchema } from "@/lib/schemas";
 
 const REFRAME_SYSTEM_PROMPT = `You are a motivational coach for Indian competitive exam students.
 
@@ -30,14 +31,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  let body: { recentHighlights?: string; streakDays?: number };
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { recentHighlights = "", streakDays = 0 } = body;
+  const parsed = ReframeSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+
+  const { recentHighlights, streakDays } = parsed.data;
 
   const userMessage = [
     streakDays > 0 ? `The student has checked in for ${streakDays} days in a row.` : "",

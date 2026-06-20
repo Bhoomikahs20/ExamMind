@@ -18,6 +18,7 @@ import { generateCompletion } from "@/lib/ai-client";
 import { detectCrisis } from "@/lib/crisis-detector";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { sanitizeUserText } from "@/lib/mood-utils";
+import { AnalyzeSchema } from "@/lib/schemas";
 import type { StressTag } from "@/types";
 
 const VALID_TAGS: StressTag[] = [
@@ -67,25 +68,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- Parse body ---
-  let body: {
-    journalText?: string;
-    rollingSummary?: string;
-    recentMoods?: number[];
-  };
-
+  // --- Parse + Zod validate body ---
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { journalText = "", rollingSummary = "", recentMoods = [] } = body;
-
-  // --- Validate ---
-  if (!journalText || journalText.trim().length < 5) {
-    return NextResponse.json({ error: "Journal text too short" }, { status: 400 });
+  const parsed = AnalyzeSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
   }
+
+  const { journalText, rollingSummary, recentMoods } = parsed.data;
 
   // --- Crisis check FIRST (before any AI processing) ---
   const crisisResult = detectCrisis(journalText);

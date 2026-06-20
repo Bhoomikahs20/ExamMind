@@ -12,6 +12,7 @@ import ChatCompanion from "@/components/ChatCompanion";
 import MindfulnessLibrary from "@/components/MindfulnessLibrary";
 import { StreakCard, ReframeCard } from "@/components/MotivationalLayer";
 import WellnessSummaryExport from "@/components/WellnessSummaryExport";
+import FontSizeControl from "@/components/FontSizeControl";
 import {
   getEntries, getAnalyses, getTodayEntry, getAnalysisForEntry,
   calculateStreak, getMoodTrend, getTagFrequency, seedDemoData, clearAllData, getDeviceId
@@ -99,6 +100,7 @@ export default function Home() {
             <span className="text-xs text-muted-foreground hidden sm:inline">AI Wellness Companion</span>
           </div>
           <div className="flex items-center gap-2">
+            <FontSizeControl />
             {entries.length === 0 && (
               <Button size="sm" variant="outline" onClick={handleSeedDemo} className="text-xs">
                 <Database className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
@@ -118,11 +120,23 @@ export default function Home() {
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {/* Wellness Summary Modal */}
         {showSummary && wellnessSummary && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Wellness Summary">
+          <div
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="summary-modal-title"
+          >
             <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-4">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold">Shareable Wellness Report</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowSummary(false)}>Close</Button>
+                <h2 id="summary-modal-title" className="font-semibold">Shareable Wellness Report</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSummary(false)}
+                  aria-label="Close wellness report"
+                >
+                  Close
+                </Button>
               </div>
               <WellnessSummaryExport summary={wellnessSummary} />
             </div>

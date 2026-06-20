@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TAG_LABELS, MOOD_CONFIG } from "@/lib/mood-utils";
 import type { CheckInEntry, AIAnalysis } from "@/types";
+import StressPatternTimeline from "@/components/StressPatternTimeline";
 
 // Lazy-load chart components
 const MoodChart = dynamic(() => import("@/components/charts/MoodChart"), {
@@ -152,6 +153,9 @@ export default function Dashboard({ entries, analyses, weeklyInsight }: Dashboar
           </CardContent>
         </Card>
       )}
+
+      {/* Stress pattern timeline — 14-day cross-reference */}
+      <StressPatternTimeline entries={entries} analyses={analyses} />
 
       {/* Weekly insight */}
       {(weeklyInsight || latestAnalysis?.recurring_pattern) && (

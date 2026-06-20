@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateCompletion } from "@/lib/ai-client";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { sanitizeUserText } from "@/lib/mood-utils";
+import { WeeklySummarySchema } from "@/lib/schemas";
 
 const SUMMARY_SYSTEM_PROMPT = `You are a wellness pattern analyst for Indian exam preparation students.
 
@@ -31,19 +32,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  let body: {
-    moodTrend?: { date: string; mood: number }[];
-    topTriggers?: { tag: string; count: number }[];
-    averageMood?: number;
-  };
-
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { moodTrend = [], topTriggers = [], averageMood = 3 } = body;
+  const parsed = WeeklySummarySchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+
+  const { moodTrend, topTriggers, averageMood } = parsed.data;
 
   const moodSummary = moodTrend
     .slice(-7)

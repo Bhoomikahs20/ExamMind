@@ -93,7 +93,11 @@ export default function BoxBreathing() {
     <div className="text-center space-y-6 py-4">
       <div>
         <h3 className="text-lg font-semibold">Box Breathing</h3>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p
+          className="text-sm text-muted-foreground mt-1"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           {isRunning ? currentPhase.instruction : "Start when you're ready. Breathe at a comfortable pace."}
         </p>
       </div>

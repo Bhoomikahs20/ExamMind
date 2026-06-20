@@ -19,6 +19,7 @@ import { generateStream } from "@/lib/ai-client";
 import { detectCrisis } from "@/lib/crisis-detector";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { sanitizeUserText } from "@/lib/mood-utils";
+import { ChatSchema } from "@/lib/schemas";
 
 const CHAT_SYSTEM_PROMPT = `You are ExamMind, a supportive AI companion for students preparing for competitive exams in India (NEET, JEE, CUET, CAT, GATE, UPSC).
 
@@ -45,14 +46,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // --- Parse body ---
-  let body: {
-    messages?: { role: "user" | "assistant"; content: string }[];
-    moodContext?: string;
-  };
-
+  // --- Parse + Zod validate body ---
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
@@ -60,14 +57,15 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { messages = [], moodContext = "" } = body;
-
-  if (!messages.length) {
-    return new Response(JSON.stringify({ error: "No messages provided" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+  const parsed = ChatSchema.safeParse(raw);
+  if (!parsed.success) {
+    return new Response(
+      JSON.stringify({ error: "Validation failed", details: parsed.error.flatten().fieldErrors }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
   }
+
+  const { messages, moodContext } = parsed.data;
 
   // --- Crisis check on the last user message ---
   const lastUserMsg = messages.filter((m) => m.role === "user").pop();
